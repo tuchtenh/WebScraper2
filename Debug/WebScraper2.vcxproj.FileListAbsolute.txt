@@ -1,0 +1,4 @@
+C:\Users\Lukas\source\repos\WebScraper2\Debug\WebScraper2.vcxproj.CopyComplete
+C:\Users\Lukas\source\repos\WebScraper2\Debug\WebScraper2.exe
+C:\Users\Lukas\source\repos\WebScraper2\Debug\libcurl-d.dll
+C:\Users\Lukas\source\repos\WebScraper2\Debug\zlibd1.dll

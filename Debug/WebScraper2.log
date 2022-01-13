@@ -1,5 +1,0 @@
-﻿  WebScraper2.cpp
-C:\Users\Lukas\source\repos\WebScraper2\WebScraper2.cpp(49,1): error C2059: syntax error: 'private'
-C:\Users\Lukas\source\repos\WebScraper2\WebScraper2.cpp(49,44): error C2143: syntax error: missing ';' before '{'
-C:\Users\Lukas\source\repos\WebScraper2\WebScraper2.cpp(49,44): error C2447: '{': missing function header (old-style formal list?)
-C:\Users\Lukas\source\repos\WebScraper2\WebScraper2.cpp(104,25): error C3861: 'search_links': identifier not found

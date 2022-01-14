@@ -1,5 +1,2 @@
-company,link
-M/F Badji Mokhtar III,http://www.ferry-site.dk/ferry.php?id=9827889&lang=en
-M/F El Djazair II,http://www.ferry-site.dk/ferry.php?id=9265421&lang=en
-M/F Tariq Ibn Ziyad,http://www.ferry-site.dk/ferry.php?id=9109768&lang=en
-M/F Tassili II,http://www.ferry-site.dk/ferry.php?id=9265419&lang=en
+ship,Building year,Building yard,Owner,Operator,Length,Breadth,Draft,GT,Mashinery,Flag,Notes
+M/F El Djazair II,"2005 ","IZAR, Spain (#294)","E.N.T.M.V.","Algerie Ferries","145,0 m","24,0 m","6,0 m","20.024","2 * Wärtsilä 12V46","Algeria","-"

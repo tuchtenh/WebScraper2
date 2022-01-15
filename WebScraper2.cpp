@@ -6,13 +6,13 @@
 #include "cpr/cpr.h"
 #include "gumbo.h"
 
-std::ofstream writeCsv("links.csv");
+std::ofstream ActiveCompaniesCsv("Active shipping companies.csv");
+std::ofstream ActiveShipsCsv("Active ships.csv");
+std::ofstream ShipsCsv("Ships.csv");
 
-std::string extractHTML() {
-	//cpr::Url url = cpr::Url{ "http://www.ferry-site.dk/ferrycompanylist.php?lang=en" };
-	//cpr::Url url = cpr::Url{ "http://www.ferry-site.dk/ferrycompany.php?Rid=214&lang=en" };
-	cpr::Url url = cpr::Url{ "http://www.ferry-site.dk/ferry.php?id=9265421" };
+std::string extractHTML(cpr::Url url) {
 	cpr::Response response = cpr::Get(url);
+	Sleep(250);
 	return response.text;
 }
 
@@ -66,7 +66,7 @@ void search_company_links(GumboNode* node) {
 				//std::cout << href->value << "\n";
 				std::string link = href->value;
 				if (link.rfind("ferrycompany.php?Rid=") == 0)
-					writeCsv << font_first_child->v.text.text << "," << link << "\n";
+					ActiveCompaniesCsv << "\'" << font_first_child->v.text.text << "\'" << "," << "http://www.ferry-site.dk/" << link << "\n";
 			}
 		}
 
@@ -75,6 +75,53 @@ void search_company_links(GumboNode* node) {
 	GumboVector* children = &node->v.element.children;
 	for (unsigned int i = 0; i < children->length; i++) {
 		search_company_links(static_cast<GumboNode*>(children->data[i]));
+	}
+}
+
+void search_ship_links(GumboNode* node) {
+	if (node->type != GUMBO_NODE_ELEMENT)
+		return;
+	if (node->v.element.tag == GUMBO_TAG_UL) {
+
+		GumboVector* ul_children = &node->v.element.children; // UL children aka li, li, li
+		//std::cout << ul_children->length << "\n";
+		for (unsigned int i = 0; i < ul_children->length; i++) {
+			GumboNode* ul_ith_child = static_cast<GumboNode*>(ul_children->data[i]); // ul ith child aka li
+
+			if (ul_ith_child->v.element.tag == GUMBO_TAG_LI) {
+
+				GumboVector* li_children = &ul_ith_child->v.element.children; // li children aka font, a
+
+				for (unsigned int y = 0; y < li_children->length; y++) {
+					GumboNode* li_ith_child = static_cast<GumboNode*>(li_children->data[y]); // li ith child aka font or a
+
+					if (li_ith_child->v.element.tag == GUMBO_TAG_A) {
+
+						GumboVector* a_children = &li_ith_child->v.element.children; // a children aka font
+						GumboNode* a_first_child = static_cast<GumboNode*>(a_children->data[0]); // font aka first a child
+
+						if (a_first_child->v.element.tag == GUMBO_TAG_FONT) {
+
+							GumboVector* font_children = &a_first_child->v.element.children; // font children aka text
+							GumboNode* font_first_child = static_cast<GumboNode*>(font_children->data[0]); // text aka ship name
+
+							GumboAttribute* href = gumbo_get_attribute(&li_ith_child->v.element.attributes, "href");
+							if (href) {
+								std::string link = href->value;
+								if (link.rfind("ferry.php?id=") == 0)
+									ActiveShipsCsv << "\'" << font_first_child->v.text.text << "\'" << "," << "http://www.ferry-site.dk/" << link << "\n";
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	GumboVector* children = &node->v.element.children;
+	for (unsigned int i = 0; i < children->length; i++) {
+		search_ship_links(static_cast<GumboNode*>(children->data[i]));
 	}
 }
 
@@ -118,53 +165,6 @@ void search_active_companies(GumboNode* node) {
 
 }
 
-void search_ship_links(GumboNode* node) {
-	if (node->type != GUMBO_NODE_ELEMENT)
-		return;
-	if (node->v.element.tag == GUMBO_TAG_UL) {
-
-		GumboVector* ul_children = &node->v.element.children; // UL children aka li, li, li
-		std::cout << ul_children->length << "\n";
-		for (unsigned int i = 0; i < ul_children->length; i++) {
-			GumboNode* ul_ith_child = static_cast<GumboNode*>(ul_children->data[i]); // ul ith child aka li
-
-			if (ul_ith_child->v.element.tag == GUMBO_TAG_LI) {
-
-				GumboVector* li_children = &ul_ith_child->v.element.children; // li children aka font, a
-
-				for (unsigned int y = 0; y < li_children->length; y++) {
-					GumboNode* li_ith_child = static_cast<GumboNode*>(li_children->data[y]); // li ith child aka font or a
-
-					if (li_ith_child->v.element.tag == GUMBO_TAG_A) {
-
-						GumboVector* a_children = &li_ith_child->v.element.children; // a children aka font
-						GumboNode* a_first_child = static_cast<GumboNode*>(a_children->data[0]); // font aka first a child
-
-						if (a_first_child->v.element.tag == GUMBO_TAG_FONT) {
-
-							GumboVector* font_children = &a_first_child->v.element.children; // font children aka text
-							GumboNode* font_first_child = static_cast<GumboNode*>(font_children->data[0]); // text aka ship name
-
-							GumboAttribute* href = gumbo_get_attribute(&li_ith_child->v.element.attributes, "href");
-							if (href) {
-								std::string link = href->value;
-								if (link.rfind("ferry.php?id=") == 0)
-									writeCsv << font_first_child->v.text.text << "," << "http://www.ferry-site.dk/" << link << "\n";
-							}
-						}
-					}
-				}
-			}
-		}
-
-	}
-
-	GumboVector* children = &node->v.element.children;
-	for (unsigned int i = 0; i < children->length; i++) {
-		search_ship_links(static_cast<GumboNode*>(children->data[i]));
-	}
-}
-
 void search_active_ships(GumboNode* node) {
 	if (node->type != GUMBO_NODE_ELEMENT)
 		return;
@@ -177,15 +177,15 @@ void search_active_ships(GumboNode* node) {
 			std::string classname = divclass->value;
 			//std::cout << classname << "\n";
 			if (classname.compare("content") == 0) {
-				std::cout << "testas" << "\n";
+				//std::cout << "testas" << "\n";
 				for (unsigned int i = 1; i < div_children->length; i++) {
 					GumboNode* div_ith_child = static_cast<GumboNode*>(div_children->data[i]); // go through div children untill h3 is found
 					if (div_ith_child->v.element.tag == GUMBO_TAG_H3) {
-						std::cout << "testas2" << "\n";
+						//std::cout << "testas2" << "\n";
 						GumboVector* h3_children = &div_ith_child->v.element.children; // h3 children aka text
 						GumboNode* h3_first_child = static_cast<GumboNode*>(h3_children->data[0]); // text aka "active ships"
 						if (h3_first_child->type == GUMBO_NODE_TEXT && std::string(h3_first_child->v.text.text).compare("Active ships:") == 0) {
-							std::cout << h3_first_child->v.text.text << "\n";
+							//std::cout << h3_first_child->v.text.text << "\n";
 							search_ship_links(static_cast<GumboNode*>(div_children->data[i + 1]));
 
 						}
@@ -210,7 +210,8 @@ void search_ship_info(GumboNode* node) {
 		GumboNode* h2_first_child = static_cast<GumboNode*>(h2_children->data[0]); // text aka ship name
 
 		if (h2_first_child->type == GUMBO_NODE_TEXT) {
-			writeCsv << h2_first_child->v.text.text;
+			std::cout << h2_first_child->v.text.text << "\n";
+			ShipsCsv << "\'" << h2_first_child->v.text.text << "\'";
 		}
 	}
 
@@ -251,7 +252,7 @@ void search_ship_info(GumboNode* node) {
 							GumboNode* td_first_child = static_cast<GumboNode*>(td_children->data[0]); // text aka right column value
 
 							if (td_first_child->type == GUMBO_NODE_TEXT) {
-								writeCsv << "," << "\"" << td_first_child->v.text.text << "\"";
+								ShipsCsv << "," << "\'" << td_first_child->v.text.text << "\'";
 							}
 							
 						}
@@ -270,7 +271,7 @@ void search_ship_info(GumboNode* node) {
 								GumboNode* a_first_child = static_cast<GumboNode*>(a_children->data[0]); // text aka hyperlink display value
 
 								if (a_first_child->type == GUMBO_NODE_TEXT) {
-									writeCsv << "," << "\"" << a_first_child->v.text.text << "\"";
+									ShipsCsv << "," << "\'" << a_first_child->v.text.text << "\'";
 								}
 
 							}
@@ -282,10 +283,34 @@ void search_ship_info(GumboNode* node) {
 						if (tr_second_child->v.element.tag == GUMBO_TAG_TD) {
 
 							GumboVector* td_children = &tr_second_child->v.element.children; // left column children aka text
-							GumboNode* td_first_child = static_cast<GumboNode*>(td_children->data[0]); // text aka right column value
 
-							if (td_first_child->type == GUMBO_NODE_TEXT) {
-								writeCsv << "," << "\"" << td_first_child->v.text.text << "\"" << "\n";
+							if (td_children->length > 0) { 
+
+								GumboNode* td_first_child = static_cast<GumboNode*>(td_children->data[0]); // text aka right column value
+
+								if (td_first_child->type == GUMBO_NODE_TEXT) {
+									ShipsCsv << "," << "\'" << td_first_child->v.text.text << "\'" << "\n";
+								}
+								if (td_first_child->v.element.tag == GUMBO_TAG_A) {
+									GumboVector* a_children = &td_first_child->v.element.children;
+									GumboNode* a_first_child = static_cast<GumboNode*>(a_children->data[0]);
+									GumboAttribute* href = gumbo_get_attribute(&td_first_child->v.element.attributes, "href");
+									std::cout << href->value << "\n";
+									std::cout << a_first_child->v.text.text << "\n";
+
+									if (a_first_child->type == GUMBO_NODE_TEXT) {
+
+										if (href && a_first_child) {
+											//std::cout << href->value << "\n";
+											//std::string link = href->value;
+											ShipsCsv << "," << "\'" << a_first_child->v.text.text << " " << "http://www.ferry-site.dk/" << href->value << "\'" << "\n";
+
+										}
+									}
+								}
+							}
+							else {
+								ShipsCsv << "," << "-" << "\n";
 							}
 							
 						}
@@ -307,19 +332,89 @@ void search_ship_info(GumboNode* node) {
 
 int main()
 {
-	std::string page_content = extractHTML();
-	GumboOutput* parsed_response = gumbo_parse(page_content.c_str());
+	cpr::Url url = cpr::Url{ "http://www.ferry-site.dk/ferrycompanylist.php?lang=en" };
+	//////cpr::Url url2 = cpr::Url{ "http://www.ferry-site.dk/ferrycompany.php?Rid=214&lang=en" };
+	//////cpr::Url url3 = cpr::Url{ "http://www.ferry-site.dk/ferry.php?id=9265421" };
 
-	writeCsv << "ship,Building year,Building yard,Owner,Operator,Length,Breadth,Draft,GT,Mashinery,Flag,Notes" << "\n";
+	std::string page_content1 = extractHTML(url);
+	GumboOutput* parsed_response1 = gumbo_parse(page_content1.c_str());
 
-	//search_title(parsed_response->root);
-	//search_links(parsed_response->root);
-	//search_active_companies(parsed_response->root);
-	//search_active_ships(parsed_response->root);
-	//std::vector<std::string> information;
-	search_ship_info(parsed_response->root);
-	writeCsv.close();
-	gumbo_destroy_output(&kGumboDefaultOptions, parsed_response);
+	ActiveCompaniesCsv << "Company,Link" << "\n";
+	std::cout << "___________________________________________1___________________________________________" << "\n";
+	search_active_companies(parsed_response1->root);
+	ActiveCompaniesCsv.close();
+	gumbo_destroy_output(&kGumboDefaultOptions, parsed_response1);
+
+
+
+	ActiveShipsCsv << "Name,Link" << "\n";
+
+	std::ifstream ActiveCompanies;
+	ActiveCompanies.open("Active shipping companies.csv");
+
+	std::cout << "___________________________________________2___________________________________________" << "\n";
+	std::string line;
+	while (std::getline(ActiveCompanies, line)) {
+		std::istringstream iss{ line };
+
+		std::vector<std::string> tokens;
+		std::string token;
+
+		while (std::getline(iss, token, ',')) {
+			tokens.push_back(token);
+		}
+
+		std::string link = tokens[1];
+
+		std::string page_content2 = extractHTML(tokens[1]);
+		GumboOutput* parsed_response2 = gumbo_parse(page_content2.c_str());
+
+		search_active_ships(parsed_response2->root);
+		gumbo_destroy_output(&kGumboDefaultOptions, parsed_response2);
+
+	}
+	
+	ActiveShipsCsv.close();
+
+	ShipsCsv << "Ship,BuildingYear,BuildingYard,Owner,Operator,Length,Breadth,Draft,GT,Mashinery,Flag,Notes" << "\n";
+
+	std::cout << "___________________________________________3___________________________________________" << "\n";
+	std::ifstream ActiveShips;
+	ActiveShips.open("Active ships.csv");
+
+	std::string line2;
+	while (std::getline(ActiveShips, line2)) {
+		std::istringstream iss{ line2 };
+
+		std::vector<std::string> tokens;
+		std::string token;
+
+		while (std::getline(iss, token, ',')) {
+			tokens.push_back(token);
+		}
+
+		std::string link = tokens[1];
+
+		std::string page_content3 = extractHTML(tokens[1]);
+		GumboOutput* parsed_response3 = gumbo_parse(page_content3.c_str());
+
+		search_ship_info(parsed_response3->root);
+		gumbo_destroy_output(&kGumboDefaultOptions, parsed_response3);
+	}
+
+
+
+	//std::string page_content3 = extractHTML("http://www.ferry-site.dk/ferry.php?id=8818300&lang=en");
+	//std::string page_content4 = extractHTML("http://www.ferry-site.dk/ferry.php?id=8604711&lang=en");
+	//GumboOutput* parsed_response3 = gumbo_parse(page_content3.c_str());
+	//GumboOutput * parsed_response4 = gumbo_parse(page_content4.c_str());
+
+	//search_ship_info(parsed_response3->root);
+	//search_ship_info(parsed_response4->root);
+	//gumbo_destroy_output(&kGumboDefaultOptions, parsed_response3);
+	//gumbo_destroy_output(&kGumboDefaultOptions, parsed_response4);
+
+	ShipsCsv.close();
 
 }
 

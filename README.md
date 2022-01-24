@@ -15,7 +15,9 @@ Given a link of shipping companies, looks through active company ships and gathe
 * Flag
 * Notes
 
-Scraped data is stored into a CSV file.
+Scraped data is stored into a CSV file.  
+Seperator: ,  
+String delimiter: '  
 
 All active shipping comapany links:
 * Active shipping companies.csv
@@ -24,6 +26,6 @@ All active ships of active shipping companies:
 * Active ships.csv
 
 All ship data: 
-* Ships.csv   (String delimiter ' )
+* Ships.csv
 
 

@@ -23,5 +23,7 @@ All active shipping comapany links:
 All active ships of active shipping companies:
 * Active ships.csv
 
-All ship data:
-* Ships.csv
+All ship data: 
+* Ships.csv   (String delimiter ' )
+
+
